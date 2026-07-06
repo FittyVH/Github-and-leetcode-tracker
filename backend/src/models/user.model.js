@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    leetcodeUsername :{
+        type: String,
+        default: null,
+        unique: true
+    },
     avatarUrl: { type: String }
 })
 

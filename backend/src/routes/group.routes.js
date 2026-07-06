@@ -6,5 +6,6 @@ const authMiddlewares = require('../middlewares/auth.middleware')
 
 router.post('/create-group', authMiddlewares.authUser, groupControllers.createGroup)
 router.post('/join-group/:groupId', authMiddlewares.authUser, groupControllers.joinGroup)
+router.get('/:groupId/leaderboard', authMiddlewares.authUser, groupControllers.getGroupLeaderboard);
 
 module.exports = router
