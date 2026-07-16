@@ -9,7 +9,11 @@ const app = express()
 
 // middleware
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: "http://localhost:5173", // Allows your Vite React app to connect
+    credentials: true,                // Allows cookies (JWT token) to be sent over cross-origin
+    methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 app.use(cookieParser())
 
 app.use('/api/auth', authRoutes)

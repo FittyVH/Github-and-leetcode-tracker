@@ -59,15 +59,15 @@ async function githubCallback(req, res) {
         id: user._id
     }, process.env.JWT_SECRET)
 
+    // send the token to cookie storage
     res.cookie("token", token, {
         httpOnly: true, // Prevents client-side scripts from stealing the token (Security best practice)
-        path: "/"       // Makes sure the cookie is sent for ALL backend routes
+        path: "/", // all api paths will be able to read this cookie
+        sameSite: "lax", 
+        secure: false        // Makes sure the cookie is sent for ALL backend routes
     })
-    
-    res.status(200).json({
-        msg: "login successful",
-        user: user
-    })
+
+    res.redirect("http://localhost:5173")
 }
 
 module.exports = { redirectToGitHub, githubCallback }

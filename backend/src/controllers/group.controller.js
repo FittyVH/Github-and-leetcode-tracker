@@ -165,7 +165,7 @@ async function getLeetCodeStats(username) {
 
         const result = await response.json();
         
-        // Dig down into LeetCode's nested response structure safely
+        // get acSubmissionNum
         const submissionStats = result.data?.matchedUser?.submitStats?.acSubmissionNum;
         
         if (!submissionStats) return 0;
