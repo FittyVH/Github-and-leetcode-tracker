@@ -70,4 +70,34 @@ async function githubCallback(req, res) {
     res.redirect("http://localhost:5173")
 }
 
-module.exports = { redirectToGitHub, githubCallback }
+// get user status, logged in or not
+async function getMe(req, res){
+    try {
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.status(401).json({ error: "No session token found. Unauthorized." });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (jwtErr) {
+            return res.status(401).json({ error: "Invalid session token. Unauthorized." });
+        }
+
+        const user = await userModel.findById(decoded.id);
+
+        if (!user) {
+            return res.status(404).json({ error: "User record not found." });
+        }
+
+        return res.status(200).json(user);
+
+    } catch (error) {
+        console.error("Error in /me endpoint:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+}
+
+module.exports = { redirectToGitHub, githubCallback, getMe }
