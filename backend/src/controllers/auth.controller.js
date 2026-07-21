@@ -100,4 +100,66 @@ async function getMe(req, res){
     }
 }
 
-module.exports = { redirectToGitHub, githubCallback, getMe }
+function parseLeetCodeUsername(input) {
+    if (!input || typeof input !== 'string') return null;
+    let trimmed = input.trim();
+    if (!trimmed) return null;
+
+    if (trimmed.includes('leetcode.com')) {
+        try {
+            const urlString = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+            const parsedUrl = new URL(urlString);
+            const pathname = parsedUrl.pathname.replace(/\/+$/, '');
+            const parts = pathname.split('/').filter(Boolean);
+            
+            if (parts.length > 0) {
+                const lastPart = parts[parts.length - 1];
+                if (lastPart !== 'u') {
+                    return lastPart;
+                }
+            }
+        } catch (e) {
+            const match = trimmed.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) return match[1];
+        }
+    }
+
+    return trimmed.replace(/^@/, '');
+}
+
+async function updateLeetCode(req, res) {
+    try {
+        const { leetcodeUrl, leetcodeUsername } = req.body;
+        const rawInput = leetcodeUrl || leetcodeUsername;
+
+        if (!rawInput) {
+            return res.status(400).json({ message: "LeetCode URL or username is required" });
+        }
+
+        const extractedUsername = parseLeetCodeUsername(rawInput);
+
+        if (!extractedUsername) {
+            return res.status(400).json({ message: "Invalid LeetCode URL or username format" });
+        }
+
+        const userId = req.user.id;
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.leetcodeUsername = extractedUsername;
+        await user.save();
+
+        res.status(200).json({
+            message: "LeetCode profile updated successfully!",
+            user
+        });
+    } catch (err) {
+        console.error("Error updating LeetCode profile:", err);
+        res.status(500).json({ message: "Server error updating LeetCode profile" });
+    }
+}
+
+module.exports = { redirectToGitHub, githubCallback, getMe, updateLeetCode }

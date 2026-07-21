@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
     leetcodeUsername :{
         type: String,
         default: null,
-        unique: true
+        sparse: true
     },
     avatarUrl: { type: String }
 })

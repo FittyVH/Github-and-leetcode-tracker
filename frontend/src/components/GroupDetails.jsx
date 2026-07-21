@@ -6,6 +6,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(false);
+  const [viewMode, setViewMode] = useState('daily'); // 'daily' (24h) or 'overall'
 
   const fetchGroupLeaderboard = async () => {
     setLoading(true);
@@ -45,22 +46,26 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
     }
   };
 
-  // Calculate maximum scores for progress bar scaling
-  const maxCommits = groupData?.leaderboard
-    ? Math.max(...groupData.leaderboard.map((m) => m.commitScore || 0), 1)
-    : 1;
+  const isDaily = viewMode === 'daily';
+  const activeLeaderboard = isDaily
+    ? groupData?.leaderboardDaily || groupData?.leaderboard || []
+    : groupData?.leaderboardOverall || groupData?.leaderboard || [];
 
-  const maxLeetcode = groupData?.leaderboard
-    ? Math.max(...groupData.leaderboard.map((m) => m.leetcodeScore || 0), 1)
-    : 1;
+  // Scaling calculations
+  const maxCommits = Math.max(
+    ...activeLeaderboard.map((m) => (isDaily ? m.github24hCommits || 0 : m.githubTotalCommits || 0)),
+    1
+  );
 
-  const totalTeamCommits = groupData?.leaderboard
-    ? groupData.leaderboard.reduce((acc, m) => acc + (m.commitScore || 0), 0)
-    : 0;
+  const maxLeetcode = Math.max(
+    ...activeLeaderboard.map((m) => (isDaily ? m.leetcode24hSolved || 0 : m.leetcodeTotalSolved || 0)),
+    1
+  );
 
-  const totalTeamLeetcode = groupData?.leaderboard
-    ? groupData.leaderboard.reduce((acc, m) => acc + (m.leetcodeScore || 0), 0)
-    : 0;
+  const team24hCommits = activeLeaderboard.reduce((acc, m) => acc + (m.github24hCommits || 0), 0);
+  const team24hLeetcode = activeLeaderboard.reduce((acc, m) => acc + (m.leetcode24hSolved || 0), 0);
+  const teamTotalCommits = activeLeaderboard.reduce((acc, m) => acc + (m.githubTotalCommits || 0), 0);
+  const teamTotalLeetcode = activeLeaderboard.reduce((acc, m) => acc + (m.leetcodeTotalSolved || 0), 0);
 
   return (
     <Container>
@@ -76,7 +81,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
       {loading ? (
         <LoadingState>
           <Spinner />
-          <LoadingText>Fetching members' GitHub & LeetCode activity...</LoadingText>
+          <LoadingText>Fetching 24-hour GitHub & LeetCode progress...</LoadingText>
         </LoadingState>
       ) : error ? (
         <ErrorBox>
@@ -95,41 +100,67 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
             </HeaderLeft>
           </HeaderCard>
 
+          {/* Mode Switcher Tabs */}
+          <TabContainer>
+            <TabButton
+              $active={isDaily}
+              onClick={() => setViewMode('daily')}
+            >
+              ⚡ 24-Hour Daily Leaderboard
+            </TabButton>
+            <TabButton
+              $active={!isDaily}
+              onClick={() => setViewMode('overall')}
+            >
+              🏆 Overall / All-Time
+            </TabButton>
+          </TabContainer>
+
           <StatsGrid>
             <StatCard>
               <StatIcon>👥</StatIcon>
               <StatInfo>
-                <StatValue>{groupData.leaderboard?.length || 0}</StatValue>
-                <StatLabel>Members</StatLabel>
+                <StatValue>{groupData.membersCount || activeLeaderboard.length}</StatValue>
+                <StatLabel>Total Members</StatLabel>
               </StatInfo>
             </StatCard>
 
             <StatCard $github>
               <StatIcon>🐙</StatIcon>
               <StatInfo>
-                <StatValue>{totalTeamCommits}</StatValue>
-                <StatLabel>Recent GitHub Commits</StatLabel>
+                <StatValue>{isDaily ? team24hCommits : teamTotalCommits}</StatValue>
+                <StatLabel>{isDaily ? '24h GitHub Commits' : 'Total GitHub Commits'}</StatLabel>
               </StatInfo>
             </StatCard>
 
             <StatCard $leetcode>
               <StatIcon>🧩</StatIcon>
               <StatInfo>
-                <StatValue>{totalTeamLeetcode}</StatValue>
-                <StatLabel>LeetCode Solved</StatLabel>
+                <StatValue>{isDaily ? team24hLeetcode : teamTotalLeetcode}</StatValue>
+                <StatLabel>{isDaily ? '24h LeetCode Solved' : 'Total LeetCode Solved'}</StatLabel>
               </StatInfo>
             </StatCard>
           </StatsGrid>
 
-          <SectionHeading>Member Progress & Leaderboard</SectionHeading>
+          <SectionHeadingRow>
+            <SectionHeading>
+              {isDaily ? '⚡ Today\'s Member Progress (Last 24 Hours)' : '🏆 All-Time Leaderboard'}
+            </SectionHeading>
+            <SubNotice>
+              {isDaily ? 'Updated live based on the last 24h activity' : 'Cumulative activity score'}
+            </SubNotice>
+          </SectionHeadingRow>
 
           <MemberList>
-            {groupData.leaderboard.map((member, index) => {
+            {activeLeaderboard.map((member, index) => {
               const isCurrentUser =
                 currentUser && (member.id === currentUser._id || member.id === currentUser.id);
 
-              const githubPercent = Math.round(((member.commitScore || 0) / maxCommits) * 100);
-              const leetcodePercent = Math.round(((member.leetcodeScore || 0) / maxLeetcode) * 100);
+              const commits = isDaily ? (member.github24hCommits || 0) : (member.githubTotalCommits || 0);
+              const leetcodeCount = isDaily ? (member.leetcode24hSolved || 0) : (member.leetcodeTotalSolved || 0);
+
+              const githubPercent = Math.round((commits / maxCommits) * 100);
+              const leetcodePercent = Math.round((leetcodeCount / maxLeetcode) * 100);
 
               let rankBadge = `${index + 1}`;
               let rankStyle = 'normal';
@@ -143,6 +174,8 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                 rankBadge = '🥉';
                 rankStyle = 'bronze';
               }
+
+              const questions24h = member.leetcode24hQuestions || [];
 
               return (
                 <MemberCard key={member.id} $isSelf={isCurrentUser}>
@@ -179,7 +212,8 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                     </MemberLeft>
 
                     <TotalScorePill>
-                      Score: <ScoreVal>{member.totalScore}</ScoreVal>
+                      {isDaily ? '24h Score: ' : 'Total Score: '}
+                      <ScoreVal>{isDaily ? (member.dailyScore || 0) : (member.totalScore || 0)}</ScoreVal>
                     </TotalScorePill>
                   </MemberHeader>
 
@@ -187,9 +221,9 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                     <MetricBox>
                       <MetricHeader>
                         <MetricTitle>
-                          <Icon>🐙</Icon> GitHub Recent Commits
+                          <Icon>🐙</Icon> {isDaily ? '24h GitHub Commits' : 'Total GitHub Commits'}
                         </MetricTitle>
-                        <MetricValue $color="#2563eb">{member.commitScore || 0} commits</MetricValue>
+                        <MetricValue $color="#2563eb">{commits} {commits === 1 ? 'commit' : 'commits'}</MetricValue>
                       </MetricHeader>
                       <ProgressBarTrack>
                         <ProgressBarFill $width={githubPercent} $color="#2563eb" />
@@ -199,15 +233,44 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                     <MetricBox>
                       <MetricHeader>
                         <MetricTitle>
-                          <Icon>🧩</Icon> LeetCode Problems Solved
+                          <Icon>🧩</Icon> {isDaily ? '24h LeetCode Solved' : 'Total LeetCode Solved'}
                         </MetricTitle>
-                        <MetricValue $color="#d97706">{member.leetcodeScore || 0} solved</MetricValue>
+                        <MetricValue $color="#d97706">
+                          {leetcodeCount} solved {isDaily && <MutedText>({member.leetcodeTotalSolved || 0} total)</MutedText>}
+                        </MetricValue>
                       </MetricHeader>
                       <ProgressBarTrack>
                         <ProgressBarFill $width={leetcodePercent} $color="#f59e0b" />
                       </ProgressBarTrack>
                     </MetricBox>
                   </ProgressGrid>
+
+                  {/* 24-Hour Solved LeetCode Questions List */}
+                  {isDaily && (
+                    <QuestionsSection>
+                      <QuestionsHeading>
+                        <span>🧩 Questions Solved Today:</span>
+                        <QuestionCountBadge>{questions24h.length}</QuestionCountBadge>
+                      </QuestionsHeading>
+                      {questions24h.length > 0 ? (
+                        <QuestionPillGrid>
+                          {questions24h.map((q, qIdx) => (
+                            <QuestionPill
+                              key={qIdx}
+                              href={q.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={`Solved on LeetCode: ${q.title}`}
+                            >
+                              🧩 {q.title} ↗
+                            </QuestionPill>
+                          ))}
+                        </QuestionPillGrid>
+                      ) : (
+                        <NoQuestionsText>No LeetCode questions solved in the last 24 hours.</NoQuestionsText>
+                      )}
+                    </QuestionsSection>
+                  )}
                 </MemberCard>
               );
             })}
@@ -333,11 +396,11 @@ const RetryButton = styled.button`
 
 const HeaderCard = styled.div`
   background: white;
-  padding: 28px 32px;
+  padding: 24px 32px;
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -387,11 +450,38 @@ const CopyTag = styled.span`
   margin-left: 4px;
 `;
 
+const TabContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  background-color: #e5e7eb;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+`;
+
+const TabButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: ${props => props.$active ? 'white' : 'transparent'};
+  color: ${props => props.$active ? '#111827' : '#6b7280'};
+  box-shadow: ${props => props.$active ? '0 2px 4px rgba(0, 0, 0, 0.08)' : 'none'};
+
+  &:hover {
+    color: #111827;
+  }
+`;
+
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 `;
 
 const StatCard = styled.div`
@@ -406,10 +496,10 @@ const StatCard = styled.div`
 `;
 
 const StatIcon = styled.div`
-  font-size: 32px;
+  font-size: 30px;
   background-color: #f3f4f6;
-  width: 54px;
-  height: 54px;
+  width: 52px;
+  height: 52px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -433,23 +523,35 @@ const StatLabel = styled.span`
   font-weight: 500;
 `;
 
+const SectionHeadingRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+`;
+
 const SectionHeading = styled.h2`
-  font-size: 20px;
+  font-size: 19px;
   color: #111827;
   font-weight: 700;
-  margin: 0 0 16px 0;
+  margin: 0;
+`;
+
+const SubNotice = styled.span`
+  font-size: 12px;
+  color: #6b7280;
 `;
 
 const MemberList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 `;
 
 const MemberCard = styled.div`
   background: white;
   border-radius: 16px;
-  padding: 20px 24px;
+  padding: 22px 24px;
   border: 1px solid ${props => props.$isSelf ? '#bfdbfe' : '#e5e7eb'};
   box-shadow: ${props => props.$isSelf ? '0 4px 12px rgba(37, 99, 235, 0.08)' : '0 2px 4px rgba(0, 0, 0, 0.03)'};
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -557,6 +659,7 @@ const ProgressGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  margin-bottom: 12px;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -594,6 +697,13 @@ const MetricValue = styled.span`
   color: ${props => props.$color || '#111827'};
 `;
 
+const MutedText = styled.span`
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-left: 4px;
+`;
+
 const ProgressBarTrack = styled.div`
   background-color: #f3f4f6;
   height: 10px;
@@ -608,4 +718,60 @@ const ProgressBarFill = styled.div`
   width: ${props => Math.min(Math.max(props.$width, 4), 100)}%;
   border-radius: 9999px;
   transition: width 0.6s ease-out;
+`;
+
+const QuestionsSection = styled.div`
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e5e7eb;
+`;
+
+const QuestionsHeading = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 8px;
+`;
+
+const QuestionCountBadge = styled.span`
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 9999px;
+`;
+
+const QuestionPillGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const QuestionPill = styled.a`
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #fef3c7;
+    border-color: #f59e0b;
+    transform: translateY(-1px);
+  }
+`;
+
+const NoQuestionsText = styled.p`
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
 `;

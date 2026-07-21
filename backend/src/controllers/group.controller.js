@@ -61,97 +61,49 @@ async function joinGroup(req, res) {
     }
 }
 
-async function getRecentCommits(username) {
+async function getRecentGitHubCommits(username) {
     try {
         const response = await fetch(`https://api.github.com/users/${username}/events`, {
             method: "GET",
-            // global headers
             headers: {
                 Accept: "application/json",
                 "User-Agent": "Github-Leetcode-Tracker"
             }
         });
 
-        if (!response.ok) return 0; // Return 0 if user profile is private or error occurs
+        if (!response.ok) return { totalCommits: 0, commits24h: 0 };
 
         const events = await response.json();
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
 
         let totalCommits = 0;
+        let commits24h = 0;
 
-        // Loop through their recent GitHub activity stream
         events.forEach(event => {
-            // Check if the activity was a code push
             if (event.type === "PushEvent" && event.payload) {
-                totalCommits += 1;
+                const commitCount = (event.payload.commits && event.payload.commits.length) || 1;
+                totalCommits += commitCount;
+
+                const eventTime = new Date(event.created_at).getTime();
+                if (eventTime >= oneDayAgo) {
+                    commits24h += commitCount;
+                }
             }
         });
 
-        return totalCommits;
+        return { totalCommits, commits24h };
     } catch (err) {
-        console.error(`Error fetching stats for ${username}:`, err);
-        return 0;
+        console.error(`Error fetching GitHub stats for ${username}:`, err);
+        return { totalCommits: 0, commits24h: 0 };
     }
 }
 
-async function getGroupLeaderboard(req, res) {
+async function getLeetCodeDetails(username) {
     try {
-        const { groupId } = req.params;
-
-        // 1. Fetch group and POPULATE the members array to get member details
-        const group = await groupModel.findById(groupId).populate('members');
-
-        if (!group) {
-            return res.status(404).json({ message: "Group not found" });
-        }
-
-        // 2. Map through all members and fetch live GitHub and LeetCode stats concurrently
-        const leaderboardPromises = group.members.map(async (member) => {
-            const githubUsername = member.username;
-            const leetcodeUsername = member.leetcodeUsername || member.username;
-
-            const [commits, leetcodeSolved] = await Promise.all([
-                getRecentCommits(githubUsername),
-                getLeetCodeStats(leetcodeUsername)
-            ]);
-
-            return {
-                id: member._id,
-                username: member.username,
-                leetcodeUsername: member.leetcodeUsername,
-                avatarUrl: member.avatarUrl,
-                commitScore: commits,
-                leetcodeScore: leetcodeSolved,
-                totalScore: commits + leetcodeSolved
-            };
-        });
-
-        const leaderboardData = await Promise.all(leaderboardPromises);
-
-        // 3. Sort by total activity score (GitHub commits + LeetCode solved) descending
-        leaderboardData.sort((a, b) => b.totalScore - a.totalScore);
-
-        res.status(200).json({
-            groupId: group._id,
-            groupName: group.name,
-            creator: group.creator,
-            membersCount: group.members.length,
-            leaderboard: leaderboardData
-        });
-
-    } catch (err) {
-        console.error("Leaderboard error:", err);
-        res.status(500).json({ message: "Server error generating leaderboard" });
-    }
-}
-
-async function getLeetCodeStats(username) {
-    try {
-        // leetcode graphql gateway
         const url = "https://leetcode.com/graphql";
         
-        // graphql query to get number of submissions of all difficulty problems
         const query = `
-          query userProblemsSolved($username: String!) {
+          query getUserLeetCodeDetails($username: String!) {
             matchedUser(username: $username) {
               submitStats {
                 acSubmissionNum {
@@ -160,37 +112,131 @@ async function getLeetCodeStats(username) {
                 }
               }
             }
+            recentAcSubmissionList(username: $username, limit: 20) {
+              id
+              title
+              titleSlug
+              timestamp
+            }
           }
         `;
 
         const response = await fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                query: query,
-                variables: { username: username }
+                query,
+                variables: { username }
             })
         });
 
-        if (!response.ok) return 0;
+        if (!response.ok) {
+            return { totalSolved: 0, solved24hCount: 0, solved24hQuestions: [] };
+        }
 
         const result = await response.json();
         
-        // get acSubmissionNum
         const submissionStats = result.data?.matchedUser?.submitStats?.acSubmissionNum;
-        
-        if (!submissionStats) return 0;
+        let totalSolved = 0;
+        if (submissionStats) {
+            const totalSolvedObj = submissionStats.find(stat => stat.difficulty === "All");
+            if (totalSolvedObj) totalSolved = totalSolvedObj.count;
+        }
 
-        // Find the "All" difficulty slot which holds the total number of unique solved problems
-        const totalSolvedObj = submissionStats.find(stat => stat.difficulty === "All");
-        
-        return totalSolvedObj ? totalSolvedObj.count : 0;
+        const recentSubmissions = result.data?.recentAcSubmissionList || [];
+        const oneDayAgoSec = Math.floor((Date.now() - (24 * 60 * 60 * 1000)) / 1000);
+
+        const recent24hSubmissions = recentSubmissions.filter(sub => {
+            const subTimestamp = parseInt(sub.timestamp, 10);
+            return subTimestamp >= oneDayAgoSec;
+        });
+
+        const uniqueTitlesSet = new Set();
+        const solved24hQuestions = [];
+
+        recent24hSubmissions.forEach(sub => {
+            if (!uniqueTitlesSet.has(sub.titleSlug)) {
+                uniqueTitlesSet.add(sub.titleSlug);
+                solved24hQuestions.push({
+                    title: sub.title,
+                    titleSlug: sub.titleSlug,
+                    url: `https://leetcode.com/problems/${sub.titleSlug}/`,
+                    timestamp: sub.timestamp
+                });
+            }
+        });
+
+        return {
+            totalSolved,
+            solved24hCount: solved24hQuestions.length,
+            solved24hQuestions
+        };
 
     } catch (err) {
-        console.error(`Error fetching LeetCode stats for ${username}:`, err);
-        return 0;
+        console.error(`Error fetching LeetCode details for ${username}:`, err);
+        return { totalSolved: 0, solved24hCount: 0, solved24hQuestions: [] };
+    }
+}
+
+async function getGroupLeaderboard(req, res) {
+    try {
+        const { groupId } = req.params;
+
+        const group = await groupModel.findById(groupId).populate('members');
+
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        const leaderboardPromises = group.members.map(async (member) => {
+            const githubUsername = member.username;
+            const leetcodeUsername = member.leetcodeUsername || member.username;
+
+            const [githubStats, leetcodeStats] = await Promise.all([
+                getRecentGitHubCommits(githubUsername),
+                getLeetCodeDetails(leetcodeUsername)
+            ]);
+
+            return {
+                id: member._id,
+                username: member.username,
+                leetcodeUsername: member.leetcodeUsername,
+                avatarUrl: member.avatarUrl,
+
+                // 24h daily stats
+                github24hCommits: githubStats.commits24h,
+                leetcode24hSolved: leetcodeStats.solved24hCount,
+                leetcode24hQuestions: leetcodeStats.solved24hQuestions,
+                dailyScore: githubStats.commits24h + leetcodeStats.solved24hCount,
+
+                // Overall / all-time stats
+                githubTotalCommits: githubStats.totalCommits,
+                leetcodeTotalSolved: leetcodeStats.totalSolved,
+                totalScore: githubStats.totalCommits + leetcodeStats.totalSolved
+            };
+        });
+
+        const membersData = await Promise.all(leaderboardPromises);
+
+        // Daily 24h leaderboard sorted by dailyScore descending
+        const leaderboardDaily = [...membersData].sort((a, b) => b.dailyScore - a.dailyScore);
+
+        // Overall leaderboard sorted by totalScore descending
+        const leaderboardOverall = [...membersData].sort((a, b) => b.totalScore - a.totalScore);
+
+        res.status(200).json({
+            groupId: group._id,
+            groupName: group.name,
+            creator: group.creator,
+            membersCount: group.members.length,
+            leaderboardDaily,
+            leaderboardOverall,
+            leaderboard: leaderboardDaily // default to daily leaderboard
+        });
+
+    } catch (err) {
+        console.error("Leaderboard error:", err);
+        res.status(500).json({ message: "Server error generating leaderboard" });
     }
 }
 
