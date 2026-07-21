@@ -97,31 +97,44 @@ async function getGroupLeaderboard(req, res) {
     try {
         const { groupId } = req.params;
 
-        // 1. Fetch group and POPULATE the members array to get their usernames
+        // 1. Fetch group and POPULATE the members array to get member details
         const group = await groupModel.findById(groupId).populate('members');
 
         if (!group) {
             return res.status(404).json({ message: "Group not found" });
         }
 
-        // 2. Map through all members and fetch their live GitHub stats concurrently
+        // 2. Map through all members and fetch live GitHub and LeetCode stats concurrently
         const leaderboardPromises = group.members.map(async (member) => {
-            const score = await getRecentCommits(member.username);
+            const githubUsername = member.username;
+            const leetcodeUsername = member.leetcodeUsername || member.username;
+
+            const [commits, leetcodeSolved] = await Promise.all([
+                getRecentCommits(githubUsername),
+                getLeetCodeStats(leetcodeUsername)
+            ]);
+
             return {
                 id: member._id,
                 username: member.username,
+                leetcodeUsername: member.leetcodeUsername,
                 avatarUrl: member.avatarUrl,
-                commitScore: score
+                commitScore: commits,
+                leetcodeScore: leetcodeSolved,
+                totalScore: commits + leetcodeSolved
             };
         });
 
         const leaderboardData = await Promise.all(leaderboardPromises);
 
-        // 3. Sort the array from highest commit score to lowest
-        leaderboardData.sort((a, b) => b.commitScore - a.commitScore);
+        // 3. Sort by total activity score (GitHub commits + LeetCode solved) descending
+        leaderboardData.sort((a, b) => b.totalScore - a.totalScore);
 
         res.status(200).json({
+            groupId: group._id,
             groupName: group.name,
+            creator: group.creator,
+            membersCount: group.members.length,
             leaderboard: leaderboardData
         });
 
@@ -181,4 +194,21 @@ async function getLeetCodeStats(username) {
     }
 }
 
-module.exports = { createGroup, joinGroup, getGroupLeaderboard }
+async function getUserGroups(req, res) {
+    try {
+        const userId = req.user.id;
+        const groups = await groupModel.find({ members: userId })
+            .populate('members', 'username avatarUrl')
+            .populate('creator', 'username avatarUrl');
+
+        res.status(200).json({
+            message: "User groups retrieved successfully",
+            groups
+        });
+    } catch (err) {
+        console.error("Get user groups error:", err);
+        res.status(500).json({ message: "Server error fetching user groups" });
+    }
+}
+
+module.exports = { createGroup, joinGroup, getGroupLeaderboard, getUserGroups }

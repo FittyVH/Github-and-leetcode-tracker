@@ -1,59 +1,111 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import CreateGroupModal from './CreateGroupModal'; // Import your new modal component
+import CreateGroupModal from './CreateGroupModal';
+import JoinGroupModal from './JoinGroupModal';
+import UserGroups from './UserGroups';
+import GroupDetails from './GroupDetails';
 
 export default function Homepage({ user }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [selectedGroup, setSelectedGroup] = useState(null);
 
   const handleGroupCreated = (newGroup) => {
-    console.log("New group data returned from backend:", newGroup);
-    // This is where you can later update a list of groups in your dashboard state
+    console.log("New group created:", newGroup);
+    setRefreshTrigger((prev) => prev + 1);
+    if (newGroup && newGroup._id) {
+      setSelectedGroup(newGroup);
+    }
+  };
+
+  const handleGroupJoined = (joinedGroup) => {
+    console.log("Joined group:", joinedGroup);
+    setRefreshTrigger((prev) => prev + 1);
+    if (joinedGroup && joinedGroup._id) {
+      setSelectedGroup(joinedGroup);
+    }
   };
 
   return (
     <Container>
-      <WelcomeCard>
-        <HeaderTitle>Welcome, {user?.username || 'Guest'}! 🎉</HeaderTitle>
-        <Subtitle>Your Git & Leet Tracker dashboard is ready.</Subtitle>
-        
-        <ButtonGroup>
-          {/* 1. Open the modal when clicked */}
-          <PrimaryButton onClick={() => setIsModalOpen(true)}>
-            Create Group
-          </PrimaryButton>
-          <SecondaryButton>Join Group</SecondaryButton>
-        </ButtonGroup>
-      </WelcomeCard>
+      <MainContent>
+        {selectedGroup ? (
+          <GroupDetails
+            groupId={selectedGroup._id}
+            currentUser={user}
+            onBack={() => setSelectedGroup(null)}
+          />
+        ) : (
+          <>
+            <WelcomeCard>
+              <HeaderTitle>Welcome, {user?.username || 'Guest'}! 🎉</HeaderTitle>
+              <Subtitle>Your Git & Leet Tracker dashboard is ready.</Subtitle>
 
-      {/* 2. Mount the modal component cleanly below your layout card */}
-      <CreateGroupModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+              <ButtonGroup>
+                <PrimaryButton onClick={() => setIsCreateModalOpen(true)}>
+                  + Create Group
+                </PrimaryButton>
+                <SecondaryButton onClick={() => setIsJoinModalOpen(true)}>
+                  🔗 Join Group
+                </SecondaryButton>
+              </ButtonGroup>
+            </WelcomeCard>
+
+            {/* Separate component displaying all joined groups */}
+            <UserGroups
+              refreshTrigger={refreshTrigger}
+              currentUser={user}
+              onSelectGroup={(group) => setSelectedGroup(group)}
+            />
+          </>
+        )}
+      </MainContent>
+
+      <CreateGroupModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         onGroupCreated={handleGroupCreated}
+      />
+
+      <JoinGroupModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onGroupJoined={handleGroupJoined}
       />
     </Container>
   );
 }
 
-// --- STYLED COMPONENTS (Kept exactly as you provided) ---
+// --- STYLED COMPONENTS ---
 
 const Container = styled.div`
-  padding: 40px;
-  font-family: sans-serif;
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: #f3f4f6;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  box-sizing: border-box;
+`;
+
+const MainContent = styled.div`
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const WelcomeCard = styled.div`
   background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  max-width: 600px;
+  padding: 36px 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
   width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e5e7eb;
 `;
 
 const HeaderTitle = styled.h1`
@@ -64,7 +116,7 @@ const HeaderTitle = styled.h1`
 `;
 
 const Subtitle = styled.p`
-  margin: 0 0 28px 0;
+  margin: 0 0 24px 0;
   font-size: 16px;
   color: #4b5563;
 `;
@@ -80,9 +132,9 @@ const PrimaryButton = styled.button`
   color: white;
   border: none;
   padding: 12px 24px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
   transition: all 0.2s ease-in-out;
@@ -103,9 +155,9 @@ const SecondaryButton = styled.button`
   color: #2563eb;
   border: 2px solid #2563eb;
   padding: 10px 22px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 
