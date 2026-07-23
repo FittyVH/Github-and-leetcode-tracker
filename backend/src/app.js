@@ -7,6 +7,9 @@ const groupRoutes = require('./routes/group.routes.js')
 
 const app = express()
 
+// Trust Render's reverse proxy for secure cookies over HTTPS
+app.set('trust proxy', 1);
+
 // middleware
 app.use(express.json())
 const allowedOrigins = [

@@ -60,7 +60,7 @@ async function githubCallback(req, res) {
         id: user._id
     }, process.env.JWT_SECRET)
 
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = process.env.NODE_ENV === "production" || (process.env.BACKEND_URL && process.env.BACKEND_URL.startsWith("https"));
     // send the token to cookie storage
     res.cookie("token", token, {
         httpOnly: true, // Prevents client-side scripts from stealing the token
