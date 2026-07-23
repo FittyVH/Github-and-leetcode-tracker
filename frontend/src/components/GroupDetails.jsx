@@ -1,12 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 
+function QuestionsDropdown({ questions }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <QuestionsSection>
+      <QuestionsHeading onClick={() => setIsOpen(!isOpen)} role="button" tabIndex={0}>
+        <HeadingLeftGroup>
+          <span>🧩 Questions Solved Today</span>
+          <QuestionCountBadge>{questions.length}</QuestionCountBadge>
+        </HeadingLeftGroup>
+        <DropdownIcon $isOpen={isOpen}>▼</DropdownIcon>
+      </QuestionsHeading>
+
+      {isOpen && (
+        <QuestionsDropdownContent>
+          {questions.length > 0 ? (
+            <QuestionPillGrid>
+              {questions.map((q, qIdx) => (
+                <QuestionPill
+                  key={qIdx}
+                  href={q.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`Solved on LeetCode: ${q.title}`}
+                >
+                  🧩 {q.title} ↗
+                </QuestionPill>
+              ))}
+            </QuestionPillGrid>
+          ) : (
+            <NoQuestionsText>No LeetCode questions solved in the last 24 hours.</NoQuestionsText>
+          )}
+        </QuestionsDropdownContent>
+      )}
+    </QuestionsSection>
+  );
+}
+
 export default function GroupDetails({ groupId, onBack, currentUser }) {
   const [groupData, setGroupData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(false);
   const [viewMode, setViewMode] = useState('daily'); // 'daily' (24h) or 'overall'
+  const [leaving, setLeaving] = useState(false);
 
   const fetchGroupLeaderboard = async () => {
     setLoading(true);
@@ -46,6 +85,33 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
     }
   };
 
+  const handleLeaveGroup = async () => {
+    if (!window.confirm(`Are you sure you want to leave "${groupData?.groupName || 'this group'}"?`)) {
+      return;
+    }
+
+    setLeaving(true);
+    try {
+      const response = await fetch(`http://localhost:3000/api/group/leave-group/${groupId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to leave group');
+      }
+
+      if (onBack) onBack();
+    } catch (err) {
+      console.error('Error leaving group:', err);
+      alert(err.message || 'Failed to leave group. Please try again.');
+    } finally {
+      setLeaving(false);
+    }
+  };
+
   const isDaily = viewMode === 'daily';
   const activeLeaderboard = isDaily
     ? groupData?.leaderboardDaily || groupData?.leaderboard || []
@@ -73,9 +139,16 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
         <BackButton onClick={onBack}>
           ← Back to Groups
         </BackButton>
-        <RefreshButton onClick={fetchGroupLeaderboard} disabled={loading}>
-          🔄 Refresh Stats
-        </RefreshButton>
+        <TopActions>
+          <RefreshButton onClick={fetchGroupLeaderboard} disabled={loading || leaving}>
+            🔄 Refresh Stats
+          </RefreshButton>
+          {groupData && (
+            <LeaveButton onClick={handleLeaveGroup} disabled={leaving}>
+              {leaving ? 'Leaving...' : '🚪 Leave Group'}
+            </LeaveButton>
+          )}
+        </TopActions>
       </TopBar>
 
       {loading ? (
@@ -245,31 +318,9 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                     </MetricBox>
                   </ProgressGrid>
 
-                  {/* 24-Hour Solved LeetCode Questions List */}
+                  {/* 24-Hour Solved LeetCode Questions List Dropdown */}
                   {isDaily && (
-                    <QuestionsSection>
-                      <QuestionsHeading>
-                        <span>🧩 Questions Solved Today:</span>
-                        <QuestionCountBadge>{questions24h.length}</QuestionCountBadge>
-                      </QuestionsHeading>
-                      {questions24h.length > 0 ? (
-                        <QuestionPillGrid>
-                          {questions24h.map((q, qIdx) => (
-                            <QuestionPill
-                              key={qIdx}
-                              href={q.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={`Solved on LeetCode: ${q.title}`}
-                            >
-                              🧩 {q.title} ↗
-                            </QuestionPill>
-                          ))}
-                        </QuestionPillGrid>
-                      ) : (
-                        <NoQuestionsText>No LeetCode questions solved in the last 24 hours.</NoQuestionsText>
-                      )}
-                    </QuestionsSection>
+                    <QuestionsDropdown questions={questions24h} />
                   )}
                 </MemberCard>
               );
@@ -294,6 +345,35 @@ const TopBar = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+`;
+
+const TopActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const LeaveButton = styled.button`
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 const BackButton = styled.button`
@@ -729,11 +809,43 @@ const QuestionsSection = styled.div`
 const QuestionsHeading = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #374151;
-  margin-bottom: 8px;
+  color: #92400e;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #fef3c7;
+    border-color: #f59e0b;
+  }
+`;
+
+const HeadingLeftGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const DropdownIcon = styled.span`
+  font-size: 10px;
+  color: #b45309;
+  transition: transform 0.2s ease;
+  transform: ${props => (props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)')};
+`;
+
+const QuestionsDropdownContent = styled.div`
+  margin-top: 8px;
+  padding: 10px 12px;
+  background-color: #fafafa;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
 `;
 
 const QuestionCountBadge = styled.span`
@@ -752,7 +864,7 @@ const QuestionPillGrid = styled.div`
 `;
 
 const QuestionPill = styled.a`
-  background-color: #fffbeb;
+  background-color: #ffffff;
   border: 1px solid #fde68a;
   color: #b45309;
   font-size: 12px;
@@ -763,7 +875,7 @@ const QuestionPill = styled.a`
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #fef3c7;
+    background-color: #fffbeb;
     border-color: #f59e0b;
     transform: translateY(-1px);
   }

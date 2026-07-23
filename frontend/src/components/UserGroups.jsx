@@ -42,6 +42,31 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleLeaveGroup = async (groupId, groupName, e) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to leave "${groupName}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/group/leave-group/${groupId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to leave group');
+      }
+
+      fetchUserGroups();
+    } catch (err) {
+      console.error('Error leaving group:', err);
+      alert(err.message || 'Failed to leave group. Please try again.');
+    }
+  };
+
   return (
     <SectionContainer>
       <HeaderRow>
@@ -88,11 +113,19 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
                 <CardTop>
                   <CardHeader>
                     <GroupName>{group.name}</GroupName>
-                    {isCreator ? (
-                      <RoleBadge $creator>Creator</RoleBadge>
-                    ) : (
-                      <RoleBadge>Member</RoleBadge>
-                    )}
+                    <BadgeGroup>
+                      {isCreator ? (
+                        <RoleBadge $creator>Creator</RoleBadge>
+                      ) : (
+                        <RoleBadge>Member</RoleBadge>
+                      )}
+                      <LeaveCardButton
+                        onClick={(e) => handleLeaveGroup(group._id, group.name, e)}
+                        title="Leave this group"
+                      >
+                        Leave
+                      </LeaveCardButton>
+                    </BadgeGroup>
                   </CardHeader>
                   
                   <IdContainer onClick={(e) => handleCopyId(group._id, e)}>
@@ -322,15 +355,38 @@ const GroupName = styled.h3`
 `;
 
 const RoleBadge = styled.span`
-  background-color: ${props => props.$creator ? '#dbeafe' : '#f3f4f6'};
-  color: ${props => props.$creator ? '#1e40af' : '#4b5563'};
+  background-color: ${props => props.$creator ? '#fef3c7' : '#f3f4f6'};
+  color: ${props => props.$creator ? '#b45309' : '#4b5563'};
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   padding: 3px 8px;
   border-radius: 6px;
-  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const BadgeGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const LeaveCardButton = styled.button`
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+  }
 `;
 
 const IdContainer = styled.div`

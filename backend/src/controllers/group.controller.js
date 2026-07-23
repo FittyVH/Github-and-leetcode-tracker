@@ -257,4 +257,47 @@ async function getUserGroups(req, res) {
     }
 }
 
-module.exports = { createGroup, joinGroup, getGroupLeaderboard, getUserGroups }
+async function leaveGroup(req, res) {
+    try {
+        const { groupId } = req.params;
+        const userId = req.user.id;
+
+        const group = await groupModel.findById(groupId);
+
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        const isMember = group.members.some(m => m.toString() === userId.toString());
+        if (!isMember) {
+            return res.status(400).json({ message: "You are not a member of this group!" });
+        }
+
+        group.members = group.members.filter(m => m.toString() !== userId.toString());
+
+        if (group.members.length === 0) {
+            await groupModel.findByIdAndDelete(groupId);
+            return res.status(200).json({ message: "Successfully left the group!" });
+        }
+
+        if (group.creator && group.creator.toString() === userId.toString()) {
+            group.creator = group.members[0];
+        }
+
+        await group.save();
+
+        res.status(200).json({
+            message: "Successfully left the group!",
+            group
+        });
+    } catch (err) {
+        console.error("Leave group error:", err);
+
+        if (err.kind === 'ObjectId') {
+            return res.status(400).json({ message: "Invalid Group ID format" });
+        }
+        res.status(500).json({ message: "Server error leaving group" });
+    }
+}
+
+module.exports = { createGroup, joinGroup, leaveGroup, getGroupLeaderboard, getUserGroups }
