@@ -3,8 +3,9 @@ const jwt = require('jsonwebtoken')
 
 // send user to the github login page
 async function redirectToGitHub(req, res) {
-    const redirectUri = "http://localhost:3000/api/auth/github/callback"
-    const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user:email`
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
+    const redirectUri = `${backendUrl}/api/auth/github/callback`;
+    const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user:email`;
 
     res.redirect(url)
 }
@@ -59,15 +60,17 @@ async function githubCallback(req, res) {
         id: user._id
     }, process.env.JWT_SECRET)
 
+    const isProd = process.env.NODE_ENV === "production";
     // send the token to cookie storage
     res.cookie("token", token, {
-        httpOnly: true, // Prevents client-side scripts from stealing the token (Security best practice)
+        httpOnly: true, // Prevents client-side scripts from stealing the token
         path: "/", // all api paths will be able to read this cookie
-        sameSite: "lax", 
-        secure: false        // Makes sure the cookie is sent for ALL backend routes
+        sameSite: isProd ? "none" : "lax", 
+        secure: isProd
     })
 
-    res.redirect("http://localhost:5173")
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(frontendUrl);
 }
 
 // get user status, logged in or not

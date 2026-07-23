@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { API_BASE_URL } from '../config';
 
 function QuestionsDropdown({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +52,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`http://localhost:3000/api/group/${groupId}/leaderboard`, {
+      const response = await fetch(`${API_BASE_URL}/api/group/${groupId}/leaderboard`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -92,7 +93,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
 
     setLeaving(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/group/leave-group/${groupId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/group/leave-group/${groupId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

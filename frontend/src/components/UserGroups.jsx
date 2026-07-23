@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { API_BASE_URL } from '../config';
 
 export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup }) {
   const [groups, setGroups] = useState([]);
@@ -11,7 +12,7 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
     setLoading(true);
     setError('');
     try {
-      const response = await fetch("http://localhost:3000/api/group/user-groups", {
+      const response = await fetch(`${API_BASE_URL}/api/group/user-groups`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -49,7 +50,7 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/group/leave-group/${groupId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/group/leave-group/${groupId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

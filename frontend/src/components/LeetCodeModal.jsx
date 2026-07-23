@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Modal from './Modal';
+import { API_BASE_URL } from '../config';
 
 export default function LeetCodeModal({ isOpen, onClose, currentUsername, onUserUpdated }) {
   const [inputUrl, setInputUrl] = useState('');
@@ -27,7 +28,7 @@ export default function LeetCodeModal({ isOpen, onClose, currentUsername, onUser
     setSuccessMsg('');
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/leetcode", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/leetcode`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

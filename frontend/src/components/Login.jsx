@@ -1,11 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
+import { API_BASE_URL } from '../config';
 
 export default function Login() {
     
     const handleGitHubLogin = () => {
         // navigate to the assigned url
-        window.location.href = "http://localhost:3000/api/auth/github";
+        window.location.href = `${API_BASE_URL}/api/auth/github`;
     };
 
     return (

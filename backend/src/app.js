@@ -9,8 +9,19 @@ const app = express()
 
 // middleware
 app.use(express.json())
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:5173"
+].filter(Boolean);
+
 app.use(cors({
-    origin: "http://localhost:5173", // Allows your Vite React app to connect
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl)
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            return callback(null, true);
+        }
+        return callback(null, true); // flexible fallback
+    },
     credentials: true,                // Allows cookies (JWT token) to be sent over cross-origin
     methods: ["GET", "POST", "PUT", "DELETE"]
 }));
