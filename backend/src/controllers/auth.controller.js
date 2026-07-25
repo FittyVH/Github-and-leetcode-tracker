@@ -11,66 +11,88 @@ async function redirectToGitHub(req, res) {
 }
 
 async function githubCallback(req, res) {
-    console.log("Callback hit");
-    const { code } = req.query
-
-    // we post the clientId and secret to github to verify
-    // response returns a promise to the request object, you can console it to see whats inside
-    const response = await fetch("https://github.com/login/oauth/access_token", {
-        method: "POST",
-        body: JSON.stringify({
-            client_id: process.env.GITHUB_CLIENT_ID,
-            client_secret: process.env.GITHUB_CLIENT_SECRET,
-            code
-        }),
-        headers: {
-            Accept: "application/json", // i want in json format
-            "Content-Type": "application/json" // i am sending in json format
-        }
-    })
-
-    const tokenData = await response.json() // we convert it into a json object
-
-    const userData = await fetch("https://api.github.com/user", {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${tokenData.access_token}`,
-            Accept: "application/json"
-        }
-    })
-
-    const githubUser = await userData.json()
-
-    let user = await userModel.findOne({ githubId: githubUser.id.toString() })
-
-    // if the user does NOT exist, create their account
-    if (!user) {
-        console.log("First time user! Creating record...")
-        user = await userModel.create({
-            githubId: githubUser.id.toString(),
-            username: githubUser.login,
-            avatarUrl: githubUser.avatar_url
-        })
-    } else {
-        console.log("Returning user! Skipping account creation...")
-    }
-
-    // create a token
-    const token = jwt.sign({
-        id: user._id
-    }, process.env.JWT_SECRET)
-
-    const isProd = process.env.NODE_ENV === "production" || (process.env.BACKEND_URL && process.env.BACKEND_URL.startsWith("https"));
-    // send the token to cookie storage
-    res.cookie("token", token, {
-        httpOnly: true, // Prevents client-side scripts from stealing the token
-        path: "/", // all api paths will be able to read this cookie
-        sameSite: isProd ? "none" : "lax", 
-        secure: isProd
-    })
-
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    res.redirect(frontendUrl);
+    try {
+        console.log("Callback hit");
+        const { code } = req.query
+
+        if (!code) {
+            console.error("No code received from GitHub");
+            return res.redirect(`${frontendUrl}?error=no_code`);
+        }
+
+        // we post the clientId and secret to github to verify
+        // response returns a promise to the request object, you can console it to see whats inside
+        const response = await fetch("https://github.com/login/oauth/access_token", {
+            method: "POST",
+            body: JSON.stringify({
+                client_id: process.env.GITHUB_CLIENT_ID,
+                client_secret: process.env.GITHUB_CLIENT_SECRET,
+                code
+            }),
+            headers: {
+                Accept: "application/json", // i want in json format
+                "Content-Type": "application/json" // i am sending in json format
+            }
+        })
+
+        const tokenData = await response.json() // we convert it into a json object
+
+        // Guard: GitHub rejected the code (expired, already used, wrong client, etc.)
+        if (tokenData.error || !tokenData.access_token) {
+            console.error("GitHub token exchange failed:", tokenData.error, tokenData.error_description);
+            return res.redirect(`${frontendUrl}?error=token_exchange_failed`);
+        }
+
+        const userData = await fetch("https://api.github.com/user", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${tokenData.access_token}`,
+                Accept: "application/json"
+            }
+        })
+
+        const githubUser = await userData.json()
+
+        // Guard: GitHub user fetch failed
+        if (!githubUser.id) {
+            console.error("Failed to fetch GitHub user profile:", githubUser);
+            return res.redirect(`${frontendUrl}?error=user_fetch_failed`);
+        }
+
+        let user = await userModel.findOne({ githubId: githubUser.id.toString() })
+
+        // if the user does NOT exist, create their account
+        if (!user) {
+            console.log("First time user! Creating record...")
+            user = await userModel.create({
+                githubId: githubUser.id.toString(),
+                username: githubUser.login,
+                avatarUrl: githubUser.avatar_url
+            })
+        } else {
+            console.log("Returning user! Skipping account creation...")
+        }
+
+        // create a token
+        const token = jwt.sign({
+            id: user._id
+        }, process.env.JWT_SECRET)
+
+        const isProd = process.env.NODE_ENV === "production" || (process.env.BACKEND_URL && process.env.BACKEND_URL.startsWith("https"));
+        // send the token to cookie storage
+        res.cookie("token", token, {
+            httpOnly: true, // Prevents client-side scripts from stealing the token
+            path: "/", // all api paths will be able to read this cookie
+            sameSite: isProd ? "none" : "lax", 
+            secure: isProd
+        })
+
+        res.redirect(frontendUrl);
+    } catch (error) {
+        console.error("Unexpected error in GitHub callback:", error);
+        res.redirect(`${frontendUrl}?error=server_error`);
+    }
 }
 
 // get user status, logged in or not
