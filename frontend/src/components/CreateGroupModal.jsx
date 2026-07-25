@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Modal from './Modal';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, authFetch } from '../config';
 
 export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
   const [groupName, setGroupName] = useState('');
@@ -16,10 +16,9 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/group/create-group`, {
+      const response = await authFetch(`${API_BASE_URL}/api/group/create-group`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // Send our session cookies securely
         body: JSON.stringify({ name: groupName }),
       });
 

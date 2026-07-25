@@ -79,16 +79,8 @@ async function githubCallback(req, res) {
             id: user._id
         }, process.env.JWT_SECRET)
 
-        const isProd = process.env.NODE_ENV === "production" || (process.env.BACKEND_URL && process.env.BACKEND_URL.startsWith("https"));
-        // send the token to cookie storage
-        res.cookie("token", token, {
-            httpOnly: true, // Prevents client-side scripts from stealing the token
-            path: "/", // all api paths will be able to read this cookie
-            sameSite: isProd ? "none" : "lax", 
-            secure: isProd
-        })
-
-        res.redirect(frontendUrl);
+        // Pass token in URL since frontend and backend are on different origins (cross-origin cookie is blocked)
+        res.redirect(`${frontendUrl}?token=${token}`);
     } catch (error) {
         console.error("Unexpected error in GitHub callback:", error);
         res.redirect(`${frontendUrl}?error=server_error`);
@@ -98,7 +90,8 @@ async function githubCallback(req, res) {
 // get user status, logged in or not
 async function getMe(req, res){
     try {
-        const token = req.cookies.token;
+        // Support both cookie-based (local) and Authorization header-based (production cross-origin) tokens
+        const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
         if (!token) {
             return res.status(401).json({ error: "No session token found. Unauthorized." });

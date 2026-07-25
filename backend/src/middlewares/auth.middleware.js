@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken')
 
 async function authUser(req, res, next){
-    const token = req.cookies.token
+    // Support both cookie-based (local) and Authorization header-based (production cross-origin) tokens
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]
 
     if (!token) {
         return res.status(401).json({ message: "Access denied. No token provided." })
@@ -24,4 +25,4 @@ async function authUser(req, res, next){
     }
 }
 
-module.exports = {authUser}
+module.exports = {authUser}

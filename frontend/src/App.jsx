@@ -14,18 +14,37 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // If GitHub just redirected back with a token in the URL, save it
+        const params = new URLSearchParams(window.location.search);
+        const urlToken = params.get("token");
+        if (urlToken) {
+          localStorage.setItem("token", urlToken);
+          // Clean the token out of the URL without a page reload
+          window.history.replaceState({}, document.title, "/");
+        }
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/auth/github/me`, {
-          credentials: "include", // Required to send session cookies to the backend
+          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         if (response.ok) {
           const data = await response.json();
           setUser(data);
         } else if (response.status === 401) {
-          // Unauthorized means the user is not logged in yet.
+          localStorage.removeItem("token");
           setUser(null);
         } else {
-          // Any other status indicates a server or database error.
           setError(true);
         }
       } catch (err) {

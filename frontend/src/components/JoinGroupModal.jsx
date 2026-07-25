@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Modal from './Modal';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, authFetch } from '../config';
 
 export default function JoinGroupModal({ isOpen, onClose, onGroupJoined }) {
   const [groupId, setGroupId] = useState('');
@@ -17,10 +17,9 @@ export default function JoinGroupModal({ isOpen, onClose, onGroupJoined }) {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/group/join-group/${trimmedId}`, {
+      const response = await authFetch(`${API_BASE_URL}/api/group/join-group/${trimmedId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
       });
 
       const data = await response.json();

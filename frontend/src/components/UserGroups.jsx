@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, authFetch } from '../config';
 
 export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup }) {
   const [groups, setGroups] = useState([]);
@@ -12,10 +12,9 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/api/group/user-groups`, {
+      const response = await authFetch(`${API_BASE_URL}/api/group/user-groups`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
       });
 
       if (!response.ok) {
