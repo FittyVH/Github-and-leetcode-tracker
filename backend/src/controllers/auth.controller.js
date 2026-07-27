@@ -85,7 +85,11 @@ async function githubCallback(req, res) {
         // signalling that this origin is a legitimate participant, not a passive tracker.
         res.send(buildTransferPage(frontendUrl, token, null));
     } catch (error) {
-        console.error("Unexpected error in GitHub callback:", error);
+        // Log the FULL error so it shows in Render's log dashboard
+        console.error("=== githubCallback CRASH ===");
+        console.error("Message:", error.message);
+        console.error("Stack:", error.stack);
+        console.error("===========================");
         res.send(buildTransferPage(frontendUrl, null, 'server_error'));
     }
 }

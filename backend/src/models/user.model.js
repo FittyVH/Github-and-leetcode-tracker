@@ -10,10 +10,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    leetcodeUsername :{
+    leetcodeUsername: {
         type: String,
-        default: null,
-        sparse: true
+        default: null
     },
     avatarUrl: { type: String }
 })
