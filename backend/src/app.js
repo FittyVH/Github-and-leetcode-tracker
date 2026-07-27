@@ -11,6 +11,14 @@ const app = express()
 app.set('trust proxy', 1);
 
 // middleware
+// Suppress Chrome Bounce Tracking Mitigation warning:
+// Declaring storage-access intent signals to Chrome that this origin
+// is a legitimate first-party participant, not a passive tracker.
+app.use((req, res, next) => {
+    res.setHeader('Permissions-Policy', 'storage-access=(self)');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    next();
+});
 app.use(express.json())
 const allowedOrigins = [
     process.env.FRONTEND_URL,
