@@ -9,7 +9,7 @@ import { API_BASE_URL } from "./config";
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null); // null = no error, string = error message
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -17,6 +17,17 @@ function App() {
         // If GitHub just redirected back with a token in the URL, save it
         const params = new URLSearchParams(window.location.search);
         const urlToken = params.get("token");
+        const urlError = params.get("error");
+
+        if (urlError) {
+          // Backend sent back an explicit error (e.g. token exchange failed)
+          console.error("Auth error from backend:", urlError);
+          window.history.replaceState({}, document.title, "/");
+          setError(`Login failed: ${urlError.replace(/_/g, ' ')}`);
+          setLoading(false);
+          return;
+        }
+
         if (urlToken) {
           localStorage.setItem("token", urlToken);
           // Clean the token out of the URL without a page reload
@@ -31,25 +42,54 @@ function App() {
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/auth/github/me`, {
-          credentials: "include",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // Retry up to 3 times with increasing delays to handle Render cold-starts
+        // (free tier backends sleep after inactivity and take ~10s to wake up)
+        let lastError = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            if (attempt > 1) {
+              setLoading(`Waking up server... (attempt ${attempt}/3)`);
+              await new Promise(r => setTimeout(r, attempt * 3000));
+            }
 
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-        } else if (response.status === 401) {
-          localStorage.removeItem("token");
-          setUser(null);
+            const response = await fetch(`${API_BASE_URL}/api/auth/github/me`, {
+              credentials: "include",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              setUser(data);
+              return;
+            } else if (response.status === 401) {
+              localStorage.removeItem("token");
+              setUser(null);
+              return;
+            } else {
+              // Non-401 server error — log the details
+              const body = await response.text().catch(() => '');
+              console.error(`/me returned ${response.status}:`, body);
+              lastError = `Server returned ${response.status}`;
+              // Don't retry on 4xx (except 401 handled above)
+              if (response.status < 500) break;
+            }
+          } catch (networkErr) {
+            // Network error = backend likely sleeping (Render cold-start)
+            console.warn(`Attempt ${attempt} failed (network):`, networkErr.message);
+            lastError = 'network';
+          }
+        }
+
+        if (lastError === 'network') {
+          setError('Could not reach the server. It may still be waking up — please refresh in a few seconds.');
         } else {
-          setError(true);
+          setError(lastError || 'Unexpected server error. Please try again.');
         }
       } catch (err) {
         console.error("Authentication check failed:", err);
-        setError(true);
+        setError('Unexpected error. Please refresh the page.');
       } finally {
         setLoading(false);
       }
@@ -62,13 +102,13 @@ function App() {
     return (
       <LoadingContainer>
         <Spinner />
-        <LoadingText>Checking session...</LoadingText>
+        <LoadingText>{typeof loading === 'string' ? loading : 'Checking session...'}</LoadingText>
       </LoadingContainer>
     );
   }
 
   if (error) {
-    return <Errorpage />;
+    return <Errorpage message={error} />;
   }
 
   return <>{user ? <Homepage user={user} /> : <Login />}</>;
