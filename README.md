@@ -73,8 +73,6 @@ Github-and-leetcode-tracker/
 
 ---
 
-## Environment Variables & Configuration
-
 ### Backend Environment Variables (`backend/.env`)
 
 When deploying the backend (e.g., on Render), configure the following environment variables in your deployment platform dashboard:
