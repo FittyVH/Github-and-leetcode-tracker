@@ -73,30 +73,6 @@ Github-and-leetcode-tracker/
 
 ---
 
-### Backend Environment Variables (`backend/.env`)
-
-When deploying the backend (e.g., on Render), configure the following environment variables in your deployment platform dashboard:
-
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| PORT | Port number for the server | 3000 |
-| MONGO_DB_CLUSTER / MONGO_URI | MongoDB Atlas Connection String | mongodb+srv://user:pass@cluster.mongodb.net/dbname |
-| JWT_SECRET | Secret key used for signing JWT tokens | your_jwt_secret_key |
-| GITHUB_CLIENT_ID | Client ID from GitHub OAuth App | Ov23li... |
-| GITHUB_CLIENT_SECRET | Client Secret from GitHub OAuth App | ccf7c7... |
-| FRONTEND_URL | Deployed Frontend Origin URL | https://your-app.vercel.app |
-| BACKEND_URL | Deployed Backend Origin URL | https://your-backend.onrender.com |
-
-### Frontend Environment Variables (`frontend/.env`)
-
-When deploying the frontend (e.g., on Vercel or Netlify), set:
-
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| VITE_API_BASE_URL | URL of your deployed backend service | https://your-backend.onrender.com |
-
----
-
 ## Local Development Setup
 
 If you want to run the project locally for development:
