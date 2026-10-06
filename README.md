@@ -34,7 +34,7 @@ The project is architected to run seamlessly in modern cloud deployment environm
 ### Frontend
 - Framework: React 19 + Vite 6
 - Styling: styled-components (CSS-in-JS design system)
-- Deployment Target: Vercel / Netlify / Static Hosting
+- Deployment Target: Render
 
 ### Backend
 - Runtime: Node.js
