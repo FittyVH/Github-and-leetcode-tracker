@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { API_BASE_URL, authFetch } from '../config';
+import { GitHubLogo } from './Login';
+
+// LeetCode Logo Icon SVG
+const LeetCodeLogoIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 95 111" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <path d="M68.0063 83.3006C70.1875 81.1194 70.1875 77.6256 68.0063 75.4444L54.9931 62.4313C52.8119 60.25 49.3181 60.25 47.1369 62.4313C44.9556 64.6125 44.9556 68.1063 47.1369 70.2875L54.8644 78.015L40.2638 92.6156C38.0825 94.7969 38.0825 98.2906 40.2638 100.472C42.445 102.653 45.9388 102.653 48.12 100.472L68.0063 83.3006Z" fill="#FFA116"/>
+    <path fillRule="evenodd" clipRule="evenodd" d="M54.8644 28.985L40.2638 14.3844C38.0825 12.2031 38.0825 8.70938 40.2638 6.52813C42.445 4.34688 45.9388 4.34688 48.12 6.52813L68.0063 26.415C70.1875 28.5963 70.1875 32.09 68.0063 34.2713L54.9931 47.2844C52.8119 49.4656 49.3181 49.4656 47.1369 47.2844C44.9556 45.1031 44.9556 41.6094 47.1369 39.4281L54.8644 28.985Z" fill="#B3B3B3"/>
+    <path fillRule="evenodd" clipRule="evenodd" d="M23.7925 111C17.7644 111 12.8706 106.106 12.8706 100.078V10.9219C12.8706 4.89375 17.7644 0 23.7925 0H75.035C81.0631 0 85.9569 4.89375 85.9569 10.9219V30.0781C85.9569 33.3094 83.3456 35.9219 80.1144 35.9219C76.8831 35.9219 74.2706 33.3094 74.2706 30.0781V11.6875H24.5575V99.3125H74.2706V80.0781C74.2706 76.8469 76.8831 74.2344 80.1144 74.2344C83.3456 74.2344 85.9569 76.8469 85.9569 80.0781V100.078C85.9569 106.106 81.0631 111 75.035 111H23.7925Z" fill="#B3B3B3"/>
+  </svg>
+);
 
 function QuestionsDropdown({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +19,8 @@ function QuestionsDropdown({ questions }) {
     <QuestionsSection>
       <QuestionsHeading onClick={() => setIsOpen(!isOpen)} role="button" tabIndex={0}>
         <HeadingLeftGroup>
-          <span>🧩 Questions Solved Today</span>
+          <LeetCodeLogoIcon size={14} />
+          <span>Questions Solved Today</span>
           <QuestionCountBadge>{questions.length}</QuestionCountBadge>
         </HeadingLeftGroup>
         <DropdownIcon $isOpen={isOpen}>▼</DropdownIcon>
@@ -27,7 +38,9 @@ function QuestionsDropdown({ questions }) {
                   rel="noopener noreferrer"
                   title={`Solved on LeetCode: ${q.title}`}
                 >
-                  🧩 {q.title} ↗
+                  <LeetCodeLogoIcon size={12} />
+                  <span>{q.title}</span>
+                  <span style={{ fontSize: '10px' }}>↗</span>
                 </QuestionPill>
               ))}
             </QuestionPillGrid>
@@ -144,7 +157,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
           </RefreshButton>
           {groupData && (
             <LeaveButton onClick={handleLeaveGroup} disabled={leaving}>
-              {leaving ? 'Leaving...' : '🚪 Leave Group'}
+              {leaving ? 'Leaving...' : 'Leave Group'}
             </LeaveButton>
           )}
         </TopActions>
@@ -153,7 +166,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
       {loading ? (
         <LoadingState>
           <Spinner />
-          <LoadingText>Fetching 24-hour GitHub & LeetCode progress...</LoadingText>
+          <LoadingText>Fetching GitHub &amp; LeetCode progress...</LoadingText>
         </LoadingState>
       ) : error ? (
         <ErrorBox>
@@ -166,7 +179,8 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
             <HeaderLeft>
               <GroupTitle>{groupData.groupName}</GroupTitle>
               <IdBadge onClick={handleCopyId}>
-                Group ID: <IdCode>{groupData.groupId || groupId}</IdCode>
+                <IdLabel>Group ID:</IdLabel>
+                <IdCode>{groupData.groupId || groupId}</IdCode>
                 <CopyTag>{copiedId ? '✓ Copied' : '📋 Copy'}</CopyTag>
               </IdBadge>
             </HeaderLeft>
@@ -178,13 +192,13 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
               $active={isDaily}
               onClick={() => setViewMode('daily')}
             >
-              ⚡ 24-Hour Daily Leaderboard
+              24-Hour Daily Leaderboard
             </TabButton>
             <TabButton
               $active={!isDaily}
               onClick={() => setViewMode('overall')}
             >
-              🏆 Overall / All-Time
+              Overall Leaderboard
             </TabButton>
           </TabContainer>
 
@@ -197,18 +211,22 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
               </StatInfo>
             </StatCard>
 
-            <StatCard $github>
-              <StatIcon>🐙</StatIcon>
+            <StatCard>
+              <StatIconSvg>
+                <GitHubLogo size={24} color="#b3b3b3" />
+              </StatIconSvg>
               <StatInfo>
                 <StatValue>{isDaily ? team24hCommits : teamTotalCommits}</StatValue>
                 <StatLabel>{isDaily ? '24h GitHub Commits' : 'Total GitHub Commits'}</StatLabel>
               </StatInfo>
             </StatCard>
 
-            <StatCard $leetcode>
-              <StatIcon>🧩</StatIcon>
+            <StatCard>
+              <StatIconSvg>
+                <LeetCodeLogoIcon size={24} />
+              </StatIconSvg>
               <StatInfo>
-                <StatValue>{isDaily ? team24hLeetcode : teamTotalLeetcode}</StatValue>
+                <StatValue $yellow>{isDaily ? team24hLeetcode : teamTotalLeetcode}</StatValue>
                 <StatLabel>{isDaily ? '24h LeetCode Solved' : 'Total LeetCode Solved'}</StatLabel>
               </StatInfo>
             </StatCard>
@@ -216,10 +234,10 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
 
           <SectionHeadingRow>
             <SectionHeading>
-              {isDaily ? '⚡ Today\'s Member Progress (Last 24 Hours)' : '🏆 All-Time Leaderboard'}
+              {isDaily ? "Today's Member Progress (Last 24 Hours)" : "All-Time Leaderboard"}
             </SectionHeading>
             <SubNotice>
-              {isDaily ? 'Updated live based on the last 24h activity' : 'Cumulative activity score'}
+              {isDaily ? "Updated live based on the last 24h activity" : "Cumulative activity score"}
             </SubNotice>
           </SectionHeadingRow>
 
@@ -235,17 +253,10 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
               const leetcodePercent = Math.round((leetcodeCount / maxLeetcode) * 100);
 
               let rankBadge = `${index + 1}`;
-              let rankStyle = 'normal';
-              if (index === 0) {
-                rankBadge = '🥇';
-                rankStyle = 'gold';
-              } else if (index === 1) {
-                rankBadge = '🥈';
-                rankStyle = 'silver';
-              } else if (index === 2) {
-                rankBadge = '🥉';
-                rankStyle = 'bronze';
-              }
+              let rankType = 'normal';
+              if (index === 0) rankType = 'gold';
+              else if (index === 1) rankType = 'silver';
+              else if (index === 2) rankType = 'bronze';
 
               const questions24h = member.leetcode24hQuestions || [];
 
@@ -253,7 +264,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                 <MemberCard key={member.id} $isSelf={isCurrentUser}>
                   <MemberHeader>
                     <MemberLeft>
-                      <RankBadge $type={rankStyle}>{rankBadge}</RankBadge>
+                      <RankBadge $type={rankType}>{rankBadge}</RankBadge>
                       <Avatar
                         src={member.avatarUrl || 'https://github.com/identicons/ghost.png'}
                         alt={member.username}
@@ -269,6 +280,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                             target="_blank"
                             rel="noopener noreferrer"
                           >
+                            <GitHubLogo size={12} color="#8a8a8a" />
                             GitHub ↗
                           </ProfileLink>
                           <ProfileLink
@@ -277,6 +289,7 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                             rel="noopener noreferrer"
                             $leetcode
                           >
+                            <LeetCodeLogoIcon size={12} />
                             LeetCode ↗
                           </ProfileLink>
                         </ProfileLinks>
@@ -293,26 +306,28 @@ export default function GroupDetails({ groupId, onBack, currentUser }) {
                     <MetricBox>
                       <MetricHeader>
                         <MetricTitle>
-                          <Icon>🐙</Icon> {isDaily ? '24h GitHub Commits' : 'Total GitHub Commits'}
+                          <GitHubLogo size={14} color="#b3b3b3" />
+                          <span>{isDaily ? '24h GitHub Commits' : 'Total GitHub Commits'}</span>
                         </MetricTitle>
-                        <MetricValue $color="#2563eb">{commits} {commits === 1 ? 'commit' : 'commits'}</MetricValue>
+                        <MetricValue $color="#b3b3b3">{commits} {commits === 1 ? 'commit' : 'commits'}</MetricValue>
                       </MetricHeader>
                       <ProgressBarTrack>
-                        <ProgressBarFill $width={githubPercent} $color="#2563eb" />
+                        <ProgressBarFill $width={githubPercent} $color="#60a5fa" />
                       </ProgressBarTrack>
                     </MetricBox>
 
                     <MetricBox>
                       <MetricHeader>
                         <MetricTitle>
-                          <Icon>🧩</Icon> {isDaily ? '24h LeetCode Solved' : 'Total LeetCode Solved'}
+                          <LeetCodeLogoIcon size={14} />
+                          <span>{isDaily ? '24h LeetCode Solved' : 'Total LeetCode Solved'}</span>
                         </MetricTitle>
-                        <MetricValue $color="#d97706">
+                        <MetricValue $color="#ffa116">
                           {leetcodeCount} solved {isDaily && <MutedText>({member.leetcodeTotalSolved || 0} total)</MutedText>}
                         </MetricValue>
                       </MetricHeader>
                       <ProgressBarTrack>
-                        <ProgressBarFill $width={leetcodePercent} $color="#f59e0b" />
+                        <ProgressBarFill $width={leetcodePercent} $color="#ffa116" />
                       </ProgressBarTrack>
                     </MetricBox>
                   </ProgressGrid>
@@ -337,6 +352,7 @@ const Container = styled.div`
   width: 100%;
   max-width: 900px;
   margin-top: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 `;
 
 const TopBar = styled.div`
@@ -353,63 +369,63 @@ const TopActions = styled.div`
 `;
 
 const LeaveButton = styled.button`
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 14px;
+  background-color: transparent;
+  color: #f87171;
+  border: 1px solid #5c2020;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: #fee2e2;
-    border-color: #fca5a5;
-    color: #b91c1c;
+    background-color: #2a1515;
+    border-color: #dc2626;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
 const BackButton = styled.button`
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-size: 14px;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  color: #eff1f6bf;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: #f9fafb;
-    border-color: #9ca3af;
-    transform: translateX(-2px);
+    background-color: #282828;
+    color: #ffffff;
+    border-color: #555555;
   }
 `;
 
 const RefreshButton = styled.button`
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #4b5563;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  color: #eff1f6bf;
+  padding: 8px 14px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background-color: #f9fafb;
-    color: #111827;
+    background-color: #282828;
+    color: #ffffff;
+    border-color: #555555;
   }
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 `;
@@ -420,44 +436,44 @@ const spin = keyframes`
 `;
 
 const LoadingState = styled.div`
-  background: white;
+  background: #282828;
+  border: 1px solid #3a3a3a;
   padding: 60px 20px;
-  border-radius: 16px;
+  border-radius: 8px;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
 const Spinner = styled.div`
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #2563eb;
+  border: 3px solid #3a3a3a;
+  border-top: 3px solid #ffa116;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   animation: ${spin} 0.8s linear infinite;
   margin-bottom: 16px;
 `;
 
 const LoadingText = styled.p`
-  color: #4b5563;
-  font-size: 15px;
+  color: #eff1f6bf;
+  font-size: 14px;
   font-weight: 500;
   margin: 0;
 `;
 
 const ErrorBox = styled.div`
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: #2a1515;
+  border: 1px solid #5c2020;
   padding: 32px;
-  border-radius: 16px;
+  border-radius: 8px;
   text-align: center;
 `;
 
 const ErrorText = styled.p`
-  color: #991b1b;
-  font-size: 15px;
+  color: #f87171;
+  font-size: 14px;
   margin: 0 0 16px 0;
 `;
 
@@ -465,21 +481,20 @@ const RetryButton = styled.button`
   background-color: #dc2626;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   &:hover { background-color: #b91c1c; }
 `;
 
 const HeaderCard = styled.div`
-  background: white;
-  padding: 24px 32px;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
-  margin-bottom: 20px;
+  background: #282828;
+  padding: 22px 28px;
+  border-radius: 8px;
+  border: 1px solid #3a3a3a;
+  margin-bottom: 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -493,93 +508,109 @@ const HeaderLeft = styled.div`
 
 const GroupTitle = styled.h1`
   margin: 0;
-  font-size: 26px;
-  color: #111827;
-  font-weight: 800;
+  font-size: 22px;
+  color: #ffffff;
+  font-weight: 700;
 `;
 
 const IdBadge = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background-color: #f3f4f6;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #4b5563;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
   cursor: pointer;
   width: fit-content;
-  transition: background-color 0.15s;
+  transition: border-color 0.15s;
 
   &:hover {
-    background-color: #e5e7eb;
+    border-color: #ffa116;
   }
+`;
+
+const IdLabel = styled.span`
+  color: #8a8a8a;
 `;
 
 const IdCode = styled.code`
   font-family: monospace;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
 `;
 
 const CopyTag = styled.span`
-  color: #2563eb;
+  color: #ffa116;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   margin-left: 4px;
 `;
 
 const TabContainer = styled.div`
   display: flex;
   gap: 8px;
-  background-color: #e5e7eb;
+  background-color: #1f1f1f;
+  border: 1px solid #3a3a3a;
   padding: 4px;
-  border-radius: 12px;
-  margin-bottom: 24px;
+  border-radius: 8px;
+  margin-bottom: 20px;
 `;
 
 const TabButton = styled.button`
   flex: 1;
-  padding: 10px 16px;
-  border-radius: 9px;
+  padding: 9px 16px;
+  border-radius: 6px;
   border: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: ${props => props.$active ? 'white' : 'transparent'};
-  color: ${props => props.$active ? '#111827' : '#6b7280'};
-  box-shadow: ${props => props.$active ? '0 2px 4px rgba(0, 0, 0, 0.08)' : 'none'};
+  transition: all 0.15s ease;
+  background-color: ${props => props.$active ? '#282828' : 'transparent'};
+  color: ${props => props.$active ? '#ffa116' : '#8a8a8a'};
+  border: ${props => props.$active ? '1px solid #3a3a3a' : '1px solid transparent'};
 
   &:hover {
-    color: #111827;
+    color: ${props => props.$active ? '#ffa116' : '#ffffff'};
   }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
 `;
 
 const StatCard = styled.div`
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  background: #282828;
+  border-radius: 8px;
+  padding: 16px 20px;
+  border: 1px solid #3a3a3a;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 `;
 
 const StatIcon = styled.div`
-  font-size: 30px;
-  background-color: #f3f4f6;
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+  font-size: 24px;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const StatIconSvg = styled.div`
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -591,14 +622,14 @@ const StatInfo = styled.div`
 `;
 
 const StatValue = styled.span`
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  color: #111827;
+  color: ${props => props.$yellow ? '#ffa116' : '#ffffff'};
 `;
 
 const StatLabel = styled.span`
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #8a8a8a;
   font-weight: 500;
 `;
 
@@ -606,38 +637,36 @@ const SectionHeadingRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 `;
 
 const SectionHeading = styled.h2`
-  font-size: 19px;
-  color: #111827;
+  font-size: 16px;
+  color: #ffffff;
   font-weight: 700;
   margin: 0;
 `;
 
 const SubNotice = styled.span`
   font-size: 12px;
-  color: #6b7280;
+  color: #8a8a8a;
 `;
 
 const MemberList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 `;
 
 const MemberCard = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 22px 24px;
-  border: 1px solid ${props => props.$isSelf ? '#bfdbfe' : '#e5e7eb'};
-  box-shadow: ${props => props.$isSelf ? '0 4px 12px rgba(37, 99, 235, 0.08)' : '0 2px 4px rgba(0, 0, 0, 0.03)'};
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #282828;
+  border-radius: 8px;
+  padding: 18px 20px;
+  border: 1px solid ${props => props.$isSelf ? '#ffa11666' : '#3a3a3a'};
+  transition: border-color 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+    border-color: ${props => props.$isSelf ? '#ffa116' : '#555555'};
   }
 `;
 
@@ -645,34 +674,41 @@ const MemberHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 `;
 
 const MemberLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 `;
 
 const RankBadge = styled.div`
-  font-size: ${props => props.$type !== 'normal' ? '22px' : '14px'};
-  font-weight: 700;
-  width: 32px;
-  height: 32px;
+  font-size: 12px;
+  font-weight: 800;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${props => props.$type === 'normal' ? '#f3f4f6' : 'transparent'};
-  color: #4b5563;
   border-radius: 50%;
+  background-color: ${props =>
+    props.$type === 'gold' ? '#ffa116' :
+    props.$type === 'silver' ? '#b3b3b3' :
+    props.$type === 'bronze' ? '#cd7f32' : '#3a3a3a'
+  };
+  color: ${props =>
+    props.$type === 'gold' || props.$type === 'silver' || props.$type === 'bronze' ? '#1a1a1a' : '#eff1f6bf'
+  };
 `;
 
 const Avatar = styled.img`
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #f3f4f6;
+  border: 1px solid #3a3a3a;
+  background-color: #1a1a1a;
 `;
 
 const UserInfo = styled.div`
@@ -688,57 +724,62 @@ const UserNameRow = styled.div`
 `;
 
 const UserName = styled.span`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #111827;
+  color: #ffffff;
 `;
 
 const YouTag = styled.span`
-  background-color: #2563eb;
-  color: white;
+  background-color: #ffa116;
+  color: #1a1a1a;
   font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
+  font-weight: 800;
+  padding: 1px 6px;
   border-radius: 4px;
   text-transform: uppercase;
 `;
 
 const ProfileLinks = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 10px;
 `;
 
 const ProfileLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  color: ${props => props.$leetcode ? '#d97706' : '#2563eb'};
+  color: ${props => props.$leetcode ? '#ffa116' : '#8a8a8a'};
   font-weight: 600;
   text-decoration: none;
 
   &:hover {
     text-decoration: underline;
+    color: ${props => props.$leetcode ? '#ffb732' : '#ffffff'};
   }
 `;
 
 const TotalScorePill = styled.div`
-  background-color: #f3f4f6;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 13px;
-  color: #4b5563;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #8a8a8a;
   font-weight: 600;
 `;
 
 const ScoreVal = styled.span`
-  color: #111827;
+  color: #ffa116;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 const ProgressGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 8px;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -758,71 +799,68 @@ const MetricHeader = styled.div`
 `;
 
 const MetricTitle = styled.span`
-  font-size: 13px;
-  color: #4b5563;
+  font-size: 12px;
+  color: #8a8a8a;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 6px;
 `;
 
-const Icon = styled.span`
-  font-size: 14px;
-`;
-
 const MetricValue = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: ${props => props.$color || '#111827'};
+  color: ${props => props.$color || '#ffffff'};
 `;
 
 const MutedText = styled.span`
   font-size: 11px;
-  color: #9ca3af;
+  color: #666666;
   font-weight: 500;
   margin-left: 4px;
 `;
 
 const ProgressBarTrack = styled.div`
-  background-color: #f3f4f6;
-  height: 10px;
-  border-radius: 9999px;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  height: 8px;
+  border-radius: 4px;
   overflow: hidden;
   width: 100%;
 `;
 
 const ProgressBarFill = styled.div`
-  background-color: ${props => props.$color || '#2563eb'};
+  background-color: ${props => props.$color || '#ffa116'};
   height: 100%;
   width: ${props => Math.min(Math.max(props.$width, 4), 100)}%;
-  border-radius: 9999px;
-  transition: width 0.6s ease-out;
+  border-radius: 4px;
+  transition: width 0.4s ease-out;
 `;
 
 const QuestionsSection = styled.div`
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px dashed #e5e7eb;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #3a3a3a;
 `;
 
 const QuestionsHeading = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #92400e;
+  padding: 6px 10px;
+  background-color: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffa116;
   cursor: pointer;
   user-select: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 
   &:hover {
-    background-color: #fef3c7;
-    border-color: #f59e0b;
+    background-color: #2a2200;
+    border-color: #ffa11655;
   }
 `;
 
@@ -834,55 +872,59 @@ const HeadingLeftGroup = styled.div`
 
 const DropdownIcon = styled.span`
   font-size: 10px;
-  color: #b45309;
+  color: #ffa116;
   transition: transform 0.2s ease;
   transform: ${props => (props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)')};
 `;
 
 const QuestionsDropdownContent = styled.div`
   margin-top: 8px;
-  padding: 10px 12px;
-  background-color: #fafafa;
-  border: 1px solid #f3f4f6;
-  border-radius: 8px;
+  padding: 10px;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
 `;
 
 const QuestionCountBadge = styled.span`
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #ffa11625;
+  color: #ffa116;
   font-size: 11px;
   font-weight: 800;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 9999px;
+  border: 1px solid #ffa11640;
 `;
 
 const QuestionPillGrid = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const QuestionPill = styled.a`
-  background-color: #ffffff;
-  border: 1px solid #fde68a;
-  color: #b45309;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #282828;
+  border: 1px solid #3a3a3a;
+  color: #ffa116;
   font-size: 12px;
   font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
   text-decoration: none;
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #fffbeb;
-    border-color: #f59e0b;
-    transform: translateY(-1px);
+    background-color: #2a2200;
+    border-color: #ffa116;
+    color: #ffb732;
   }
 `;
 
 const NoQuestionsText = styled.p`
   font-size: 12px;
-  color: #9ca3af;
+  color: #666666;
   font-style: italic;
   margin: 0;
 `;

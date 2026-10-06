@@ -96,15 +96,15 @@ export default function LeetCodeModal({ isOpen, onClose, currentUsername, onUser
 // --- STYLED COMPONENTS ---
 
 const Title = styled.h3`
-  margin: 0 0 8px 0;
-  color: #111827;
-  font-size: 20px;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+  font-size: 18px;
   font-weight: 700;
 `;
 
 const Subtitle = styled.p`
-  color: #4b5563;
-  font-size: 14px;
+  color: #8a8a8a;
+  font-size: 13px;
   margin: 0 0 20px 0;
   line-height: 1.5;
 `;
@@ -113,45 +113,52 @@ const InputLabel = styled.label`
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: #b3b3b3;
   margin-bottom: 6px;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 10px 12px;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
   box-sizing: border-box;
   font-size: 14px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  color: #ffffff;
+  transition: border-color 0.15s;
+
+  &::placeholder {
+    color: #555555;
+  }
+
   &:focus {
     outline: none;
-    border-color: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    border-color: #ffa116;
   }
 `;
 
 const HintText = styled.p`
   font-size: 12px;
-  color: #6b7280;
+  color: #8a8a8a;
   margin: 6px 0 16px 0;
   code {
-    background-color: #f3f4f6;
-    padding: 2px 5px;
+    background-color: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    padding: 2px 6px;
     border-radius: 4px;
-    color: #111827;
+    color: #ffa116;
   }
 `;
 
 const ErrorText = styled.p`
-  color: #dc2626;
+  color: #f87171;
   font-size: 13px;
   margin: -4px 0 12px 0;
 `;
 
 const SuccessText = styled.p`
-  color: #059669;
+  color: #2cbb5d;
   font-size: 13px;
   font-weight: 600;
   margin: -4px 0 12px 0;
@@ -160,33 +167,42 @@ const SuccessText = styled.p`
 const ActionGroup = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   margin-top: 12px;
 `;
 
 const CancelButton = styled.button`
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  color: #b3b3b3;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s;
-  &:hover:not(:disabled) { background-color: #f9fafb; }
+  transition: all 0.15s;
+  &:hover:not(:disabled) {
+    background-color: #333333;
+    color: #ffffff;
+  }
 `;
 
 const SubmitButton = styled.button`
-  background-color: #d97706;
-  color: white;
+  background-color: #ffa116;
+  color: #1a1a1a;
   border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.15s;
-  &:hover:not(:disabled) { background-color: #b45309; }
-  &:disabled { background-color: #fcd34d; cursor: not-allowed; }
+  &:hover:not(:disabled) {
+    background-color: #ffb732;
+  }
+  &:disabled {
+    background-color: #66460f;
+    color: #888888;
+    cursor: not-allowed;
+  }
 `;

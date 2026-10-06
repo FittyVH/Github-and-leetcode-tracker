@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { API_BASE_URL, authFetch } from '../config';
+import { GitHubLogo } from './Login';
 
 export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup }) {
   const [groups, setGroups] = useState([]);
@@ -126,7 +127,7 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
                       </LeaveCardButton>
                     </BadgeGroup>
                   </CardHeader>
-                  
+
                   <IdContainer onClick={(e) => handleCopyId(group._id, e)}>
                     <IdLabel>ID: <IdCode>{group._id}</IdCode></IdLabel>
                     <CopyButton>
@@ -165,7 +166,7 @@ export default function UserGroups({ refreshTrigger, currentUser, onSelectGroup 
 // --- STYLED COMPONENTS ---
 
 const SectionContainer = styled.div`
-  margin-top: 32px;
+  margin-top: 28px;
   width: 100%;
   max-width: 900px;
 `;
@@ -174,49 +175,50 @@ const HeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 `;
 
 const SectionTitleContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
 const SectionTitle = styled.h2`
   margin: 0;
-  font-size: 22px;
-  color: #111827;
+  font-size: 18px;
+  color: #ffffff;
   font-weight: 700;
 `;
 
 const Badge = styled.span`
-  background-color: #e0e7ff;
-  color: #3730a3;
-  font-size: 13px;
+  background-color: #ffa11620;
+  color: #ffa116;
+  font-size: 12px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 9999px;
+  border: 1px solid #ffa11640;
 `;
 
 const RefreshButton = styled.button`
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #4b5563;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  color: #b3b3b3;
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background-color: #f9fafb;
-    color: #111827;
-    border-color: #9ca3af;
+    background-color: #282828;
+    color: #ffffff;
+    border-color: #555;
   }
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 `;
@@ -227,19 +229,19 @@ const spin = keyframes`
 `;
 
 const LoadingBox = styled.div`
-  background: white;
+  background: #282828;
   padding: 40px;
-  border-radius: 12px;
+  border-radius: 8px;
+  border: 1px solid #3a3a3a;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
 const Spinner = styled.div`
-  border: 3px solid #e5e7eb;
-  border-top: 3px solid #2563eb;
+  border: 3px solid #3a3a3a;
+  border-top: 3px solid #ffa116;
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -254,15 +256,15 @@ const LoadingText = styled.p`
 `;
 
 const ErrorBox = styled.div`
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: #2a1515;
+  border: 1px solid #5c2020;
   padding: 24px;
-  border-radius: 12px;
+  border-radius: 8px;
   text-align: center;
 `;
 
 const ErrorText = styled.p`
-  color: #991b1b;
+  color: #f87171;
   font-size: 14px;
   margin: 0 0 12px 0;
 `;
@@ -280,12 +282,11 @@ const RetryButton = styled.button`
 `;
 
 const EmptyBox = styled.div`
-  background: white;
+  background: #282828;
   padding: 48px 24px;
-  border-radius: 12px;
+  border-radius: 8px;
   text-align: center;
-  border: 2px dashed #e5e7eb;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px dashed #3a3a3a;
 `;
 
 const EmptyIcon = styled.div`
@@ -296,7 +297,7 @@ const EmptyIcon = styled.div`
 const EmptyTitle = styled.h3`
   margin: 0 0 8px 0;
   font-size: 18px;
-  color: #111827;
+  color: #ffffff;
   font-weight: 600;
 `;
 
@@ -311,30 +312,28 @@ const EmptySubtitle = styled.p`
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  gap: 20px;
+  gap: 16px;
 `;
 
 const GroupCard = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e5e7eb;
+  background: #282828;
+  border-radius: 8px;
+  padding: 18px 20px;
+  border: 1px solid #3a3a3a;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
   cursor: pointer;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-    border-color: #cbd5e1;
+    border-color: #ffa116;
+    background-color: #2e2600;
   }
 `;
 
 const CardTop = styled.div`
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 `;
 
 const CardHeader = styled.div`
@@ -347,44 +346,46 @@ const CardHeader = styled.div`
 
 const GroupName = styled.h3`
   margin: 0;
-  font-size: 18px;
-  color: #1f2937;
+  font-size: 16px;
+  color: #ffffff;
   font-weight: 700;
   word-break: break-word;
 `;
 
 const RoleBadge = styled.span`
-  background-color: ${props => props.$creator ? '#fef3c7' : '#f3f4f6'};
-  color: ${props => props.$creator ? '#b45309' : '#4b5563'};
-  font-size: 11px;
+  background-color: ${props => props.$creator ? '#ffa11625' : '#3a3a3a'};
+  color: ${props => props.$creator ? '#ffa116' : '#b3b3b3'};
+  font-size: 10px;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border: 1px solid ${props => props.$creator ? '#ffa11640' : '#4a4a4a'};
 `;
 
 const BadgeGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 `;
 
 const LeaveCardButton = styled.button`
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  font-size: 11px;
+  background-color: transparent;
+  color: #f87171;
+  border: 1px solid #5c2020;
+  font-size: 10px;
   font-weight: 600;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #fee2e2;
-    border-color: #fca5a5;
-    color: #b91c1c;
+    background-color: #2a1515;
+    border-color: #dc2626;
+    color: #fca5a5;
   }
 `;
 
@@ -392,20 +393,20 @@ const IdContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #f8fafc;
-  border: 1px solid #f1f5f9;
-  padding: 6px 10px;
-  border-radius: 6px;
+  background-color: #1f1f1f;
+  border: 1px solid #3a3a3a;
+  padding: 5px 10px;
+  border-radius: 5px;
   font-size: 12px;
-  transition: background-color 0.15s;
+  transition: border-color 0.15s;
 
   &:hover {
-    background-color: #f1f5f9;
+    border-color: #ffa116;
   }
 `;
 
 const IdLabel = styled.span`
-  color: #64748b;
+  color: #6b7280;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -414,12 +415,12 @@ const IdLabel = styled.span`
 
 const IdCode = styled.code`
   font-family: monospace;
-  color: #334155;
+  color: #b3b3b3;
   font-weight: 600;
 `;
 
 const CopyButton = styled.span`
-  color: #2563eb;
+  color: #ffa116;
   font-weight: 600;
   font-size: 11px;
   white-space: nowrap;
@@ -430,7 +431,7 @@ const CardFooter = styled.div`
   align-items: center;
   justify-content: space-between;
   padding-top: 12px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #3a3a3a;
 `;
 
 const MemberStack = styled.div`
@@ -439,13 +440,13 @@ const MemberStack = styled.div`
 `;
 
 const Avatar = styled.img`
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  border: 2px solid white;
-  margin-left: -8px;
+  border: 2px solid #282828;
+  margin-left: -6px;
   object-fit: cover;
-  background-color: #e5e7eb;
+  background-color: #3a3a3a;
 
   &:first-child {
     margin-left: 0;
@@ -453,14 +454,14 @@ const Avatar = styled.img`
 `;
 
 const OverflowAvatar = styled.div`
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  border: 2px solid white;
-  margin-left: -8px;
-  background-color: #6b7280;
-  color: white;
-  font-size: 10px;
+  border: 2px solid #282828;
+  margin-left: -6px;
+  background-color: #3a3a3a;
+  color: #b3b3b3;
+  font-size: 9px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -468,7 +469,7 @@ const OverflowAvatar = styled.div`
 `;
 
 const MemberCount = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
   font-weight: 500;
 `;

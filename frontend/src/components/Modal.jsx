@@ -18,9 +18,8 @@ export default function Modal({ isOpen, onClose, children }) {
 
   return (
     <ModalOverlay onClick={onClose}>
-      {/* stopPropagation prevents clicking inside the white box from closing the modal */}
       <ModalContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
+        <CloseButton onClick={onClose} aria-label="Close modal">&times;</CloseButton>
         {children}
       </ModalContent>
     </ModalOverlay>
@@ -35,22 +34,22 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(2px); /* Gives a modern blurred-glass look */
 `;
 
 const ModalContent = styled.div`
-  background: white;
-  padding: 32px;
-  border-radius: 12px;
+  background: #282828;
+  border: 1px solid #3a3a3a;
+  padding: 30px;
+  border-radius: 8px;
   width: 440px;
   max-width: 90%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 `;
 
 const CloseButton = styled.button`
@@ -59,11 +58,12 @@ const CloseButton = styled.button`
   right: 16px;
   background: none;
   border: none;
-  font-size: 24px;
-  color: #9ca3af;
+  font-size: 22px;
+  line-height: 1;
+  color: #8a8a8a;
   cursor: pointer;
   transition: color 0.15s;
   &:hover {
-    color: #4b5563;
+    color: #ffffff;
   }
 `;

@@ -1,5 +1,5 @@
-import React from 'react'
-import styled from 'styled-components'
+import React from 'react';
+import styled from 'styled-components';
 
 const Errorpage = ({ message }) => {
   return (
@@ -14,64 +14,66 @@ const Errorpage = ({ message }) => {
         </RefreshButton>
       </Card>
     </Container>
-  )
-}
+  );
+};
 
 const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f3f4f6;
-  font-family: sans-serif;
-`
+  background-color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+`;
 
 const Card = styled.div`
-  background: #fff;
+  background: #282828;
+  border: 1px solid #3a3a3a;
   padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  border-radius: 8px;
   text-align: center;
   max-width: 420px;
   width: 100%;
-`
+`;
 
 const Icon = styled.div`
-  font-size: 40px;
+  font-size: 36px;
   margin-bottom: 12px;
-`
+`;
 
 const Title = styled.h2`
   margin: 0 0 10px;
   font-size: 20px;
-  color: #1f2937;
-`
+  color: #ffffff;
+`;
 
 const Message = styled.p`
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 14px;
-  color: #dc2626;
+  color: #f87171;
   font-weight: 500;
   word-break: break-word;
-`
+`;
 
 const Hint = styled.p`
   margin: 0 0 24px;
   font-size: 13px;
-  color: #6b7280;
-`
+  color: #8a8a8a;
+`;
 
 const RefreshButton = styled.button`
   padding: 10px 24px;
-  background: #2563eb;
-  color: #fff;
+  background: #ffa116;
+  color: #1a1a1a;
   border: none;
   border-radius: 6px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
-  &:hover { background: #1d4ed8; }
-`
+  &:hover {
+    background: #ffb732;
+  }
+`;
 
-export default Errorpage
+export default Errorpage;

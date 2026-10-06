@@ -9,18 +9,16 @@ import { API_BASE_URL } from "./config";
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // null = no error, string = error message
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // If GitHub just redirected back with a token in the URL, save it
         const params = new URLSearchParams(window.location.search);
         const urlToken = params.get("token");
         const urlError = params.get("error");
 
         if (urlError) {
-          // Backend sent back an explicit error (e.g. token exchange failed)
           console.error("Auth error from backend:", urlError);
           window.history.replaceState({}, document.title, "/");
           setError(`Login failed: ${urlError.replace(/_/g, ' ')}`);
@@ -30,7 +28,6 @@ function App() {
 
         if (urlToken) {
           localStorage.setItem("token", urlToken);
-          // Clean the token out of the URL without a page reload
           window.history.replaceState({}, document.title, "/");
         }
 
@@ -42,8 +39,6 @@ function App() {
           return;
         }
 
-        // Retry up to 3 times with increasing delays to handle Render cold-starts
-        // (free tier backends sleep after inactivity and take ~10s to wake up)
         let lastError = null;
         for (let attempt = 1; attempt <= 3; attempt++) {
           try {
@@ -68,15 +63,12 @@ function App() {
               setUser(null);
               return;
             } else {
-              // Non-401 server error — log the details
               const body = await response.text().catch(() => '');
               console.error(`/me returned ${response.status}:`, body);
               lastError = `Server returned ${response.status}`;
-              // Don't retry on 4xx (except 401 handled above)
               if (response.status < 500) break;
             }
           } catch (networkErr) {
-            // Network error = backend likely sleeping (Render cold-start)
             console.warn(`Attempt ${attempt} failed (network):`, networkErr.message);
             lastError = 'network';
           }
@@ -127,26 +119,25 @@ const LoadingContainer = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f3f4f6;
-  font-family: sans-serif;
+  background-color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 `;
 
 const Spinner = styled.div`
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #2563eb;
+  border: 3px solid #3a3a3a;
+  border-top: 3px solid #ffa116;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: ${spin} 1s linear infinite;
+  width: 36px;
+  height: 36px;
+  animation: ${spin} 0.8s linear infinite;
   margin-bottom: 16px;
 `;
 
 const LoadingText = styled.p`
-  color: #4b5563;
-  font-size: 16px;
+  color: #eff1f6bf;
+  font-size: 15px;
   font-weight: 500;
   margin: 0;
 `;
 
 export default App;
-
